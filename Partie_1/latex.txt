@@ -1,0 +1,914 @@
+Code
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+
+% Define colors for code highlighting - Simple color names
+\colorlet{codegreen}{green!50!black}
+\colorlet{codegray}{gray}
+\colorlet{codepurple}{purple}
+\colorlet{backcolour}{gray!10}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+% Header and footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Data Cleaning Pipeline Technical Report}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Title format - Fixed syntax
+\titleformat{\section}
+  {\Large\bfseries}
+  {\thesection}
+  {1em}
+  {}
+
+\titleformat{\subsection}
+  {\large\bfseries}
+  {\thesubsection}
+  {1em}
+  {}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\Huge\bfseries Data Cleaning Pipeline Technical Report\par}
+    \vspace{1cm}
+    {\Large Comprehensive Analysis of Building Energy Data Cleaning System\par}
+    \vspace{2cm}
+    {\Large\textbf{Author:} Your Name\par}
+    \vspace{0.5cm}
+    {\Large\textbf{Date:} \today\par}
+    \vfill
+    \vfill
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+This report provides a comprehensive technical analysis of a sophisticated data cleaning pipeline specifically engineered for building energy efficiency datasets. The system represents a robust, modular architecture that systematically addresses data quality challenges through four specialized Python modules, each responsible for distinct aspects of the data cleaning lifecycle.
+
+The pipeline implements industry best practices for data quality management while incorporating domain-specific knowledge of building physics and energy efficiency parameters. This ensures that cleaned data not only meets statistical quality standards but also adheres to physical constraints and industry validation rules.
+
+\section{Code Organization and Module Architecture}
+
+\subsection{System Overview and Design Philosophy}
+
+The data cleaning pipeline is architected as a modular, sequential processing system specifically designed for building energy efficiency datasets. The system follows a unidirectional data flow pattern where each module handles a distinct responsibility in the data quality improvement process.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.2cm, auto, scale=0.8, transform shape]
+    % Nodes with smaller text and spacing
+    \node (explore) [rectangle, draw, fill=blue!20, text width=2.2cm, text centered, minimum height=1.2cm, font=\small] {Data Exploration Module};
+    \node (clean) [rectangle, draw, fill=green!20, text width=2.2cm, text centered, minimum height=1.2cm, right=of explore] {Data Cleaning Module};
+    \node (validate) [rectangle, draw, fill=orange!20, text width=2.2cm, text centered, minimum height=1.2cm, right=of clean] {Quality Validation Module};
+    \node (report) [rectangle, draw, fill=red!20, text width=2.2cm, text centered, minimum height=1.2cm, right=of validate] {Analysis Reporting Module};
+    
+    % Arrows
+    \draw[->, thick] (explore) -- (clean);
+    \draw[->, thick] (clean) -- (validate);
+    \draw[->, thick] (validate) -- (report);
+    
+    % Labels
+    \node[above=0.3cm of explore, font=\footnotesize] {Stage 1};
+    \node[above=0.3cm of clean, font=\footnotesize] {Stage 2};
+    \node[above=0.3cm of validate, font=\footnotesize] {Stage 3};
+    \node[above=0.3cm of report, font=\footnotesize] {Stage 4};
+\end{tikzpicture}
+\caption{Modular Architecture of Data Cleaning Pipeline}
+\label{fig:modular_architecture}
+\end{figure}
+
+\subsection{Module 1: data\_exploration.py - Data Loading \& Initial Analysis}
+
+\subsubsection{Core Purpose and Responsibilities}
+
+This module serves as the entry point for data ingestion and initial assessment, providing:
+
+\begin{itemize}
+\item \textbf{Data Ingestion}: Safe loading of CSV files with comprehensive error handling
+\item \textbf{Initial Profiling}: Automated data quality assessment and structure analysis
+\item \textbf{Missing Value Analysis}: Pattern detection and quantification of data completeness issues
+\item \textbf{Baseline Establishment}: Foundation for subsequent cleaning operations
+\end{itemize}
+
+\subsubsection{Key Function Specifications}
+
+\textbf{load\_data(file\_path: str) $\rightarrow$ pd.DataFrame}
+\begin{itemize}
+\item \textbf{Input}: File path string pointing to CSV data source
+\item \textbf{Processing}: 
+  \begin{itemize}
+  \item Implements try-catch blocks for FileNotFoundError and general Exception handling
+  \item Uses pandas.read\_csv() for data loading with automatic type inference
+  \item Provides immediate feedback on dataset dimensions upon successful loading
+  \end{itemize}
+\item \textbf{Output}: Returns pandas DataFrame on success, None on failure with descriptive error messages
+\item \textbf{Error Handling}: Prevents pipeline termination on file access issues
+\end{itemize}
+
+\textbf{explore\_data(df: pd.DataFrame) $\rightarrow$ dict}
+\begin{itemize}
+\item \textbf{Input}: Raw DataFrame object for analysis
+\item \textbf{Processing Sequence}:
+  \begin{enumerate}
+  \item Dataset dimensionality assessment (row and column counts)
+  \item Column listing and data type identification using pandas dtypes
+  \item Statistical summary generation using describe() for numerical features
+  \item Comprehensive missing value analysis with counts and percentages
+  \item Duplicate record detection using pandas duplicated() method
+  \end{enumerate}
+\item \textbf{Output}: Structured dictionary containing:
+  \begin{itemize}
+  \item 'shape': Tuple of (rows, columns)
+  \item 'missing\_values': Series with missing counts per column
+  \item 'data\_types': Series with column data types
+  \item 'duplicates': Integer count of duplicate rows
+  \end{itemize}
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.2cm, auto, scale=0.9, transform shape]
+    \node (start) [ellipse, draw, fill=green!20, font=\small] {Start};
+    \node (load) [rectangle, draw, fill=blue!20, below=of start, font=\small] {Load Data};
+    \node (check) [diamond, draw, fill=yellow!20, below=of load, font=\small, aspect=2] {File Found?};
+    \node (error) [rectangle, draw, fill=red!20, right=of check, font=\small] {Return None};
+    \node (profile) [rectangle, draw, fill=blue!20, below=of check, font=\small] {Data Profiling};
+    \node (analyze) [rectangle, draw, fill=blue!20, below=of profile, font=\small] {Missing Value Analysis};
+    \node (output) [ellipse, draw, fill=green!20, below=of analyze, font=\small] {Return Results};
+    
+    \draw[->] (start) -- (load);
+    \draw[->] (load) -- (check);
+    \draw[->] (check) -- node[above] {No} (error);
+    \draw[->] (check) -- node[right] {Yes} (profile);
+    \draw[->] (profile) -- (analyze);
+    \draw[->] (analyze) -- (output);
+\end{tikzpicture}
+\caption{Data Exploration Module Workflow}
+\label{fig:exploration_workflow}
+\end{figure}
+\subsection{Module 2: data\_cleaning.py - Core Data Cleaning Operations}
+
+\subsubsection{Core Purpose and Responsibilities}
+
+This module implements the fundamental data cleaning algorithms:
+
+\begin{itemize}
+\item \textbf{Missing Value Imputation}: Multiple strategies for handling incomplete data
+\item \textbf{Duplicate Management}: Identification and removal of redundant records
+\item \textbf{Outlier Detection \& Treatment}: Statistical identification and handling of anomalies
+\item \textbf{Numerical Data Specialization}: Optimized cleaning for quantitative features
+\end{itemize}
+
+\subsubsection{Key Function Specifications}
+
+\textbf{handle\_missing\_values(df: pd.DataFrame, strategy: str = 'auto') $\rightarrow$ tuple}
+\begin{itemize}
+\item \textbf{Parameters}: 
+  \begin{itemize}
+  \item df: Input DataFrame requiring missing value treatment
+  \item strategy: Processing approach ('auto', 'median', 'mean', 'mode', 'drop')
+  \end{itemize}
+\item \textbf{Processing Logic}:
+  \begin{itemize}
+  \item 'auto' mode: Applies median for numerical columns, mode for categorical
+  \item Strategy-specific value calculation and imputation
+  \item Column-wise processing with detailed operation logging
+  \item Fix counting and progress tracking
+  \end{itemize}
+\item \textbf{Returns}: Tuple containing cleaned DataFrame and integer count of applied fixes
+\end{itemize}
+
+\textbf{remove\_duplicates(df: pd.DataFrame, keep: str = 'first') $\rightarrow$ tuple}
+\begin{itemize}
+\item \textbf{Parameters}:
+  \begin{itemize}
+  \item df: DataFrame for duplicate analysis
+  \item keep: Retention strategy ('first', 'last', False)
+  \end{itemize}
+\item \textbf{Processing}: 
+  \begin{itemize}
+  \item Exact match duplicate detection across all columns
+  \item pandas drop\_duplicates() execution with specified retention policy
+  \item Before/after record counting and removal quantification
+  \end{itemize}
+\item \textbf{Returns}: Tuple of deduplicated DataFrame and count of removed duplicates
+\end{itemize}
+
+\textbf{detect\_outliers\_iqr(df: pd.DataFrame) $\rightarrow$ dict}
+\begin{itemize}
+\item \textbf{Input}: DataFrame with numerical columns for outlier analysis
+\item \textbf{Statistical Processing per Column}:
+  \begin{itemize}
+  \item Quartile calculation (Q1: 25th percentile, Q3: 75th percentile)
+  \item Interquartile Range (IQR) computation: IQR = Q3 - Q1
+  \item Boundary determination: Lower = Q1 - 1.5*IQR, Upper = Q3 + 1.5*IQR
+  \item Outlier identification and index collection
+  \end{itemize}
+\item \textbf{Output}: Comprehensive dictionary with per-column outlier statistics
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.2cm, auto, scale=0.9, transform shape]
+    \node (start) [ellipse, draw, fill=green!20, font=\small] {Start Cleaning};
+    \node (missing) [rectangle, draw, fill=blue!20, below=of start, font=\small] {Handle Missing Values};
+    \node (duplicates) [rectangle, draw, fill=blue!20, below=of missing, font=\small] {Remove Duplicates};
+    \node (outliers) [rectangle, draw, fill=blue!20, below=of duplicates, font=\small] {Detect Outliers};
+    \node (treat) [rectangle, draw, fill=blue!20, below=of outliers, font=\small] {Treat Outliers};
+    \node (complete) [ellipse, draw, fill=green!20, below=of treat, font=\small] {Cleaning Complete};
+    
+    \draw[->] (start) -- (missing);
+    \draw[->] (missing) -- (duplicates);
+    \draw[->] (duplicates) -- (outliers);
+    \draw[->] (outliers) -- (treat);
+    \draw[->] (treat) -- (complete);
+\end{tikzpicture}
+\caption{Data Cleaning Module Sequential Processing}
+\label{fig:cleaning_sequence}
+\end{figure}
+\subsection{Module 3: quality\_validation.py - Domain Validation \& Pipeline Orchestration}
+
+\subsubsection{Core Purpose and Responsibilities}
+
+This module provides domain-specific validation and overall pipeline coordination:
+
+\begin{itemize}
+\item \textbf{Domain Rule Enforcement}: Building physics constraint validation
+\item \textbf{Pipeline Orchestration}: Sequential execution of cleaning operations
+\item \textbf{Progress Tracking}: Comprehensive logging and statistics collection
+\item \textbf{Quality Assurance}: Final data quality verification and reporting
+\end{itemize}
+
+\subsubsection{Key Function Specifications}
+
+\textbf{validate\_building\_data(df: pd.DataFrame) $\rightarrow$ tuple}
+\begin{itemize}
+\item \textbf{Input}: DataFrame for domain-specific validation
+\item \textbf{Validation Rule Set}:
+  \begin{itemize}
+  \item \textbf{Relative\_Compactness}: Bounds checking (0 to 1) with numpy.clip correction
+  \item \textbf{Surface\_Area}: Positivity validation with median replacement
+  \item \textbf{Orientation}: Enumerated value verification (2,3,4,5) with mode imputation
+  \item \textbf{Glazing\_Area}: Ratio validation (0 to 1) with clipping
+  \item \textbf{Heating/Cooling\_Load}: Non-negativity enforcement with median correction
+  \end{itemize}
+\item \textbf{Returns}: Tuple of validated DataFrame, validation results dictionary, and fix count
+\end{itemize}
+
+\subsubsection{DataCleaningPipeline Class Architecture}
+
+\textbf{Class Initialization:}
+\begin{lstlisting}[language=Python]
+class DataCleaningPipeline:
+    def __init__(self, file_path: str):
+        self.file_path = file_path
+        self.cleaning_log = []  # Operation tracking
+        self.df_original = None # Original dataset
+        self.df_cleaned = None  # Processed dataset
+        self.cleaning_stats = {} # Quality metrics
+\end{lstlisting}
+
+\textbf{Core Methods:}
+
+\textbf{log\_step(step\_name: str, details: str, fixes: int = 0) $\rightarrow$ None}
+\begin{itemize}
+\item \textbf{Purpose}: Timestamped operation logging
+\item \textbf{Processing}: Creates structured log entries with timing and metrics
+\item \textbf{Output}: Updates internal cleaning\_log and provides console feedback
+\end{itemize}
+
+\textbf{run\_pipeline(missing\_strategy: str = 'auto', outlier\_method: str = 'cap') $\rightarrow$ pd.DataFrame}
+\begin{itemize}
+\item \textbf{Orchestration Sequence}:
+  \begin{enumerate}
+  \item Data loading and initial exploration
+  \item Missing value treatment with specified strategy
+  \item Duplicate record removal
+  \item Domain-specific validation
+  \item Outlier handling with chosen method
+  \end{enumerate}
+\item \textbf{Statistics Aggregation}: Collects fix counts from all processing stages
+\item \textbf{Returns}: Fully cleaned and validated DataFrame
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.8, transform shape]
+    \node (pipeline) [rectangle, draw, fill=orange!20, minimum width=2.5cm, minimum height=1.8cm, font=\small] {DataCleaningPipeline};
+    
+    \node (init) [rectangle, draw, fill=blue!10, above left=0.8cm and -0.8cm of pipeline, font=\scriptsize] {\_\_init\_\_()};
+    \node (run) [rectangle, draw, fill=blue!10, above=0.4cm of pipeline, font=\scriptsize] {run\_pipeline()};
+    \node (log) [rectangle, draw, fill=blue!10, above right=0.8cm and -0.8cm of pipeline, font=\scriptsize] {log\_step()};
+    \node (report) [rectangle, draw, fill=blue!10, below left=0.8cm and -0.8cm of pipeline, font=\scriptsize] {generate\_summary\_report()};
+    \node (save) [rectangle, draw, fill=blue!10, below=0.4cm of pipeline, font=\scriptsize] {save\_cleaned\_data()};
+    \node (get) [rectangle, draw, fill=blue!10, below right=0.8cm and -0.8cm of pipeline, font=\scriptsize] {get\_cleaning\_report()};
+    
+    \draw[->] (init) -- (pipeline);
+    \draw[->] (run) -- (pipeline);
+    \draw[->] (log) -- (pipeline);
+    \draw[->] (report) -- (pipeline);
+    \draw[->] (save) -- (pipeline);
+    \draw[->] (get) -- (pipeline);
+\end{tikzpicture}
+\caption{DataCleaningPipeline Class Method Structure}
+\label{fig:pipeline_class}
+\end{figure}
+\subsection{Module 4: analysis\_report.py - Visualization \& Reporting}
+
+\subsubsection{Core Purpose and Responsibilities}
+
+This module handles the final reporting and visualization stages:
+
+\begin{itemize}
+\item \textbf{Visual Comparison}: Multi-panel before/after analysis
+\item \textbf{Statistical Summarization}: Quantitative data quality assessment
+\item \textbf{Feature Analysis}: Detailed examination of individual variables
+\item \textbf{Report Generation}: Production of publication-ready outputs
+\end{itemize}
+
+\subsubsection{Key Function Specifications}
+
+\textbf{create\_cleaning\_report(df\_original: pd.DataFrame, df\_cleaned: pd.DataFrame, cleaning\_stats: dict) $\rightarrow$ None}
+\begin{itemize}
+\item \textbf{Input}: Original dataset, cleaned dataset, and cleaning statistics
+\item \textbf{Visualization Layout}: 2×3 subplot grid containing:
+  \begin{itemize}
+  \item Panel 1: Missing values comparison (original vs cleaned)
+  \item Panels 2-3: Distribution histograms for key numerical features
+  \item Panel 4: Correlation matrix heatmap for cleaned data
+  \item Panel 5: Cleaning statistics bar chart by fix category
+  \item Panel 6: Data quality metrics (completeness, uniqueness, validity)
+  \end{itemize}
+\item \textbf{Output}: High-resolution PNG file saved as 'data\_cleaning\_report.png'
+\end{itemize}
+
+\textbf{generate\_statistical\_summary(df\_cleaned: pd.DataFrame) $\rightarrow$ None}
+\begin{itemize}
+\item \textbf{Reporting Sections}:
+  \begin{itemize}
+  \item Basic descriptive statistics using pandas describe()
+  \item Data quality metrics (record counts, feature counts, missing values, duplicates)
+  \item Feature categorization (numerical vs categorical distribution)
+  \item Memory usage optimization analysis
+  \end{itemize}
+\item \textbf{Output}: Formatted console output with emoji-enhanced section headers
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.2cm, auto, scale=0.9, transform shape]
+    \node (start) [ellipse, draw, fill=green!20, font=\small] {Start Reporting};
+    \node (setup) [rectangle, draw, fill=blue!20, below=of start, font=\small] {Setup Visualization};
+    \node (create) [rectangle, draw, fill=blue!20, below=of setup, font=\small] {Create Cleaning Report};
+    \node (stats) [rectangle, draw, fill=blue!20, below=of create, font=\small] {Generate Statistics};
+    \node (features) [rectangle, draw, fill=blue!20, below=of stats, font=\small] {Analyze Features};
+    \node (save) [rectangle, draw, fill=blue!20, below=of features, font=\small] {Save Reports};
+    \node (complete) [ellipse, draw, fill=green!20, below=of save, font=\small] {Reporting Complete};
+    
+    \draw[->] (start) -- (setup);
+    \draw[->] (setup) -- (create);
+    \draw[->] (create) -- (stats);
+    \draw[->] (stats) -- (features);
+    \draw[->] (features) -- (save);
+    \draw[->] (save) -- (complete);
+\end{tikzpicture}
+\caption{Analysis and Reporting Module Workflow}
+\label{fig:reporting_workflow}
+\end{figure}
+\section{Complete Workflow and Execution Process}
+
+\subsection{Pipeline Execution Sequence}
+
+The data cleaning pipeline implements a systematic six-stage process that ensures comprehensive data quality management:
+
+\begin{enumerate}
+\item \textbf{Data Loading \& Initial Exploration}
+\item \textbf{Missing Value Treatment} 
+\item \textbf{Duplicate Record Removal}
+\item \textbf{Domain-Specific Validation}
+\item \textbf{Outlier Detection \& Handling}
+\item \textbf{Reporting \& Analysis Generation}
+\end{enumerate}
+
+\subsubsection{Step 1: Data Loading \& Initial Exploration}
+\begin{lstlisting}[language=Python]
+# Code execution flow
+df = load_data('data.csv')
+exploration_results = explore_data(df)
+\end{lstlisting}
+
+\textbf{Key Activities:}
+\begin{itemize}
+\item File validation and CSV parsing
+\item Dataset dimensionality assessment
+\item Data type identification and profiling
+\item Initial quality metric calculation
+\item Missing value pattern analysis
+\end{itemize}
+
+\textbf{Output:} Comprehensive data profile dictionary containing shape, data types, missing values summary, and duplicate count.
+
+\subsubsection{Step 2: Missing Value Treatment}
+\begin{lstlisting}[language=Python]
+df_cleaned, missing_fixes = handle_missing_values(df, strategy='auto')
+\end{lstlisting}
+
+\textbf{Strategy Selection Logic:}
+\begin{itemize}
+\item \textbf{Auto Mode}: Median for numerical features, mode for categorical
+\item \textbf{Manual Override}: Specific strategies (mean, median, mode, drop)
+\item \textbf{Column-wise Processing}: Individual treatment per feature type
+\end{itemize}
+
+\textbf{Quality Metrics:} Tracks initial vs. final missing value counts and percentage improvement.
+
+\subsubsection{Step 3: Duplicate Removal}
+\begin{lstlisting}[language=Python]
+df_cleaned, duplicate_fixes = remove_duplicates(df_cleaned)
+\end{lstlisting}
+
+\textbf{Methods:}
+\begin{itemize}
+\item \textbf{Keep First}: Retain first occurrence of duplicates
+\item \textbf{Keep Last}: Retain last occurrence of duplicates  
+\item \textbf{Remove All}: Complete elimination of duplicate rows
+\end{itemize}
+
+\textbf{Impact Analysis:} Reports records before/after deduplication and removal count.
+
+\subsubsection{Step 4: Domain-Specific Validation}
+\begin{lstlisting}[language=Python]
+df_cleaned, validation_results, validation_fixes = validate_building_data(df_cleaned)
+\end{lstlisting}
+
+\textbf{Building Physics Constraints:}
+\begin{itemize}
+\item \textbf{Range Validation}: Numerical bounds checking (0-1 for ratios)
+\item \textbf{Value Set Validation}: Enumerated value verification
+\item \textbf{Physical Consistency}: Positive values for physical quantities
+\item \textbf{Automated Correction}: Rule-based value replacement
+\end{itemize}
+
+\subsubsection{Step 5: Outlier Handling}
+\begin{lstlisting}[language=Python]
+df_cleaned, outlier_fixes = handle_outliers(df_cleaned, method='cap')
+\end{lstlisting}
+
+\textbf{Outlier Methods:}
+\begin{itemize}
+\item \textbf{Capping}: Replace outliers with boundary values
+\item \textbf{Removal}: Delete records containing outliers
+\item \textbf{IQR Detection}: Statistical outlier identification
+\end{itemize}
+
+\subsubsection{Step 6: Reporting \& Analysis}
+\begin{lstlisting}[language=Python]
+create_cleaning_report(original_data, cleaned_data, cleaning_stats)
+generate_statistical_summary(cleaned_data)
+\end{lstlisting}
+
+\textbf{Output Generation:}
+\begin{itemize}
+\item Visual comparison reports (6-panel dashboard)
+\item Statistical summaries and quality metrics
+\item Feature-level analysis and profiling
+\item Data quality improvement quantification
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1cm, auto, scale=0.7, transform shape]
+    \node (raw) [rectangle, draw, fill=red!20, minimum width=2.5cm, minimum height=0.8cm, font=\small] {Raw Data};
+    \node (explore) [rectangle, draw, fill=blue!20, below=of raw, minimum width=2.5cm, minimum height=0.8cm, font=\small] {Exploration};
+    \node (missing) [rectangle, draw, fill=green!20, below=of explore, minimum width=2.5cm, minimum height=0.8cm, font=\small] {Missing Values};
+    \node (duplicates) [rectangle, draw, fill=green!20, below=of missing, minimum width=2.5cm, minimum height=0.8cm, font=\small] {Duplicates};
+    \node (validate) [rectangle, draw, fill=orange!20, below=of duplicates, minimum width=2.5cm, minimum height=0.8cm, font=\small] {Validation};
+    \node (outliers) [rectangle, draw, fill=green!20, below=of validate, minimum width=2.5cm, minimum height=0.8cm, font=\small] {Outliers};
+    \node (report) [rectangle, draw, fill=purple!20, below=of outliers, minimum width=2.5cm, minimum height=0.8cm, font=\small] {Reporting};
+    \node (clean) [rectangle, draw, fill=green!30, below=of report, minimum width=2.5cm, minimum height=0.8cm, font=\small] {Clean Data};
+    
+    \draw[->, thick] (raw) -- (explore);
+    \draw[->, thick] (explore) -- (missing);
+    \draw[->, thick] (missing) -- (duplicates);
+    \draw[->, thick] (duplicates) -- (validate);
+    \draw[->, thick] (validate) -- (outliers);
+    \draw[->, thick] (outliers) -- (report);
+    \draw[->, thick] (report) -- (clean);
+\end{tikzpicture}
+\caption{Complete Data Cleaning Pipeline Sequence}
+\label{fig:complete_pipeline}
+\end{figure}
+\section{Data Quality Management Framework}
+
+\subsection{Completeness Management}
+
+\textbf{Metrics Tracked:}
+\begin{itemize}
+\item Missing value counts per column
+\item Overall dataset completeness percentage
+\item Missing value distribution patterns
+\item Treatment effectiveness measurement
+\end{itemize}
+
+\textbf{Algorithms:}
+\begin{itemize}
+\item Automated strategy selection based on data type
+\item Column-wise imputation methods
+\item Progress tracking and validation
+\end{itemize}
+
+\subsection{Uniqueness Enforcement}
+
+\textbf{Duplicate Detection:}
+\begin{itemize}
+\item Exact match identification across all columns
+\item Configurable retention policies
+\item Impact assessment on dataset size
+\end{itemize}
+
+\textbf{Quality Indicators:}
+\begin{itemize}
+\item Duplicate percentage calculation
+\item Record reduction metrics
+\item Data uniqueness certification
+\end{itemize}
+
+\subsection{Validity Checking}
+
+\textbf{Domain Rule Application:}
+\begin{itemize}
+\item Building energy efficiency constraints
+\item Physical feasibility validation
+\item Architectural parameter boundaries
+\end{itemize}
+
+\textbf{Validation Rules Matrix:}
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Feature} & \textbf{Validation Rule} & \textbf{Correction Method} & \textbf{Domain Logic} \\
+\hline
+Relative\_Compactness & 0 ≤ value ≤ 1 & Clip to bounds & Physical ratio constraint \\
+Surface\_Area & value > 0 & Median replacement & Positive physical quantity \\
+Orientation & value ∈ {2,3,4,5} & Mode replacement & Building orientation codes \\
+Glazing\_Area & 0 ≤ value ≤ 1 & Clip to bounds & Window-to-wall ratio \\
+Heating\_Load & value ≥ 0 & Median replacement & Non-negative energy demand \\
+\hline
+\end{tabular}
+\caption{Domain-specific validation rules for building energy data}
+\label{tab:validation_rules}
+\end{table}
+
+\subsection{Consistency Monitoring}
+
+\textbf{Outlier Management:}
+\begin{itemize}
+\item Statistical detection using IQR method
+\item Multiple treatment strategies
+\item Boundary value calculation
+\item Impact analysis on data distribution
+\end{itemize}
+
+\textbf{Consistency Metrics:}
+\begin{itemize}
+\item Outlier percentage per feature
+\item Treatment method effectiveness
+\item Data distribution preservation
+\end{itemize}
+\section{Automation and Intelligence Features}
+
+\subsection{Smart Strategy Selection}
+
+\textbf{Automated Decision Making:}
+\begin{itemize}
+\item \textbf{Data Type Detection}: Numerical vs. categorical classification
+\item \textbf{Missing Value Strategy}: Median/mode selection based on data characteristics
+\item \textbf{Outlier Method Selection}: Capping vs. removal based on data sensitivity
+\item \textbf{Validation Rule Application}: Domain-aware constraint enforcement
+\end{itemize}
+
+\textbf{Intelligent Defaults:}
+\begin{itemize}
+\item Median for numerical missing values (robust to outliers)
+\item Mode for categorical missing values (most frequent)
+\item Capping for outliers (preserves data volume)
+\item Domain-specific bounds for building parameters
+\end{itemize}
+
+\subsection{Domain Awareness Integration}
+
+\textbf{Building Physics Integration:}
+\begin{itemize}
+\item Energy efficiency parameter validation
+\item Architectural constraint enforcement
+\item Physical feasibility checking
+\item Industry standard compliance
+\end{itemize}
+
+\textbf{Specialized Validation:}
+\begin{itemize}
+\item Relative compactness ratio validation
+\item Surface area physical constraints
+\item Orientation code verification
+\item Glazing area percentage bounds
+\end{itemize}
+
+\subsection{Progress Tracking System}
+
+\textbf{Comprehensive Logging:}
+\begin{lstlisting}[language=Python]
+def log_step(self, step_name, details, fixes=0):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = {
+        'timestamp': timestamp,
+        'step': step_name,
+        'details': details,
+        'fixes_applied': fixes
+    }
+\end{lstlisting}
+
+\textbf{Logging Features:}
+\begin{itemize}
+\item Timestamped operation tracking
+\item Step-by-step progress monitoring
+\item Fix count accumulation
+\item Performance metric collection
+\end{itemize}
+
+\subsection{Configuration Management}
+
+\textbf{Flexible Parameters:}
+\begin{itemize}
+\item Missing value handling strategies
+\item Outlier treatment methods
+\item Duplicate retention policies
+\item Validation rule sets
+\end{itemize}
+
+\textbf{Runtime Configuration:}
+\begin{lstlisting}[language=Python]
+pipeline.run_pipeline(
+    missing_strategy='auto',
+    outlier_method='cap',
+    keep_duplicates='first'
+)
+\end{lstlisting}
+\section{Reporting and Visualization Capabilities}
+
+\subsection{Multi-Panel Visual Dashboard}
+
+\textbf{Visualization Components:}
+
+\begin{enumerate}
+\item \textbf{Missing Values Comparison}
+\begin{itemize}
+\item Side-by-side bar charts (original vs cleaned)
+\item Per-column missing value counts
+\item Improvement visualization
+\end{itemize}
+
+\item \textbf{Distribution Analysis}
+\begin{itemize}
+\item Histogram overlays for feature distributions
+\item Before/after cleaning comparison
+\item Outlier impact visualization
+\end{itemize}
+
+\item \textbf{Correlation Analysis}
+\begin{itemize}
+\item Heatmap visualization of feature relationships
+\item Color-coded correlation strengths
+\item Annotated correlation coefficients
+\end{itemize}
+
+\item \textbf{Cleaning Statistics}
+\begin{itemize}
+\item Bar chart of fixes by category
+\item Color-coded fix types
+\item Quantitative impact assessment
+\end{itemize}
+
+\item \textbf{Quality Metrics}
+\begin{itemize}
+\item Percentage-based quality indicators
+\item Completeness and uniqueness metrics
+\item Overall data health assessment
+\end{itemize}
+\end{enumerate}
+
+\subsection{Statistical Reporting System}
+
+\textbf{Comprehensive Metrics:}
+\begin{lstlisting}[language=Python]
+def generate_statistical_summary(df_cleaned):
+    # Basic statistics
+    print(df_cleaned.describe())
+    
+    # Data quality metrics
+    print(f"Total records: {len(df_cleaned)}")
+    print(f"Total features: {len(df_cleaned.columns)}")
+    print(f"Missing values: {df_cleaned.isnull().sum().sum()}")
+    print(f"Duplicate rows: {df_cleaned.duplicated().sum()}")
+    
+    # Feature categorization
+    numerical_cols = df_cleaned.select_dtypes(include=[np.number]).columns
+    categorical_cols = df_cleaned.select_dtypes(include=['object']).columns
+\end{lstlisting}
+
+\textbf{Report Sections:}
+\begin{itemize}
+\item Dataset dimensionality and structure
+\item Data type distribution
+\item Quality metric quantification
+\item Memory usage optimization
+\end{itemize}
+
+\subsection{Feature-Level Analysis}
+
+\textbf{Per-Feature Profiling:}
+\begin{lstlisting}[language=Python]
+def create_feature_analysis(df_cleaned):
+    for col in numerical_cols:
+        print(f"\n{col}:")
+        print(f"  Range: {df_cleaned[col].min():.2f} to {df_cleaned[col].max():.2f}")
+        print(f"  Mean: {df_cleaned[col].mean():.2f}")
+        print(f"  Std: {df_cleaned[col].std():.2f}")
+        print(f"  Skewness: {df_cleaned[col].skew():.2f}")
+\end{lstlisting}
+
+\textbf{Analysis Dimensions:}
+\begin{itemize}
+\item Value range and distribution
+\item Central tendency measures
+\item Variability quantification
+\item Distribution shape analysis
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.8, transform shape]
+    \draw (0,0) rectangle (10,6);
+    \draw (0,3) -- (10,3);
+    \draw (3.33,0) -- (3.33,6);
+    \draw (6.67,0) -- (6.67,6);
+    \draw (3.33,3) -- (3.33,6);
+    \draw (6.67,3) -- (6.67,6);
+    
+    \node at (1.67,4.5) [font=\small] {Missing Values};
+    \node at (5,4.5) [font=\small] {Distributions 1-2};
+    \node at (8.33,4.5) [font=\small] {Distributions 3-4};
+    \node at (1.67,1.5) [font=\small] {Correlation Matrix};
+    \node at (5,1.5) [font=\small] {Cleaning Stats};
+    \node at (8.33,1.5) [font=\small] {Quality Metrics};
+    
+    \node[above, font=\small] at (5,6) {Data Cleaning Report Dashboard};
+\end{tikzpicture}
+\caption{6-Panel Visualization Dashboard Layout}
+\label{fig:dashboard_layout}
+\end{figure}
+\section{Technical Architecture and Design Patterns}
+
+\subsection{Design Pattern Implementation}
+
+\textbf{Pipeline Pattern:}
+\begin{itemize}
+\item Sequential data processing stages
+\item Consistent interface across modules
+\item Progressive data transformation
+\item Quality improvement accumulation
+\end{itemize}
+
+\textbf{Facade Pattern:}
+\begin{itemize}
+\item DataCleaningPipeline as unified interface
+\item Simplified client interaction
+\item Complex subsystem abstraction
+\item Consistent operation sequencing
+\end{itemize}
+
+\textbf{Strategy Pattern:}
+\begin{itemize}
+\item Interchangeable cleaning algorithms
+\item Runtime strategy selection
+\item Method encapsulation
+\item Flexible behavior modification
+\end{itemize}
+
+\subsection{Error Handling Architecture}
+
+\textbf{Defensive Programming:}
+\begin{lstlisting}[language=Python]
+try:
+    df = pd.read_csv(file_path)
+    print(f"Data loaded successfully: {df.shape}")
+    return df
+except FileNotFoundError:
+    print(f"File {file_path} not found!")
+    return None
+except Exception as e:
+    print(f"Error loading file: {e}")
+    return None
+\end{lstlisting}
+
+\textbf{Error Handling Strategies:}
+\begin{itemize}
+\item Graceful degradation on file errors
+\item Early validation and failure detection
+\item Comprehensive exception logging
+\item User-friendly error messages
+\end{itemize}
+
+\section{Implementation Strengths and Advantages}
+
+\subsection{Technical Excellence}
+
+\textbf{Comprehensive Error Handling:}
+\begin{itemize}
+\item Robust file I/O operations with descriptive error messages
+\item Graceful degradation strategies for partial failures
+\item Comprehensive exception logging and reporting
+\item Fail-safe mechanisms for critical operations
+\end{itemize}
+
+\textbf{Modular Design Benefits:}
+\begin{itemize}
+\item Independent component testing and validation
+\item Clear separation of concerns and responsibilities
+\item Simplified maintenance and debugging
+\item Enhanced code reusability across projects
+\end{itemize}
+\section{Conclusion and Recommendations}
+
+\subsection{System Effectiveness Assessment}
+
+The data cleaning pipeline demonstrates exceptional effectiveness in handling building energy efficiency datasets through its comprehensive modular architecture and domain-specific validation capabilities. The system successfully addresses all major data quality dimensions including completeness, uniqueness, validity, and consistency.
+
+Key success factors include:
+\begin{itemize}
+\item Robust error handling and graceful degradation
+\item Comprehensive progress tracking and logging
+\item Domain-aware validation rules
+\item Multi-faceted reporting and visualization
+\item Flexible configuration options
+\end{itemize}
+
+\subsection{Deployment Recommendations}
+
+\textbf{Production Deployment:}
+\begin{itemize}
+\item Implement comprehensive unit testing for all modules
+\item Establish continuous integration pipelines
+\item Create detailed documentation for end-users
+\item Develop monitoring and alerting systems
+\end{itemize}
+
+\textbf{Maintenance Strategy:}
+\begin{itemize}
+\item Regular dependency updates and security patches
+\item Performance monitoring and optimization
+\item User feedback incorporation cycles
+\item Periodic architecture reviews and refactoring
+\end{itemize}
+
+\end{document}
